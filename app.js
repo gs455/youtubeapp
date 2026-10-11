@@ -24,7 +24,7 @@ const fmt=s=>{const h=s/3600|0,m=(s%3600)/60|0,x=String(s%60).padStart(2,'0');re
 const num=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(0)+'K':n;
 const ago=d=>{const s=(Date.now()-new Date(d))/1000;return s<3600?(s/60|0)+'m':s<86400?(s/3600|0)+'h':(s/86400|0)+'d'};
 async function folderVideos(chIds){const ids=[];
- await Promise.all(chIds.map(async c=>{try{const r=await api(`${YT}playlistItems?part=contentDetails&maxResults=10&playlistId=UU${c.slice(2)}`);r.items.forEach(i=>ids.push(i.contentDetails.videoId))}catch(e){}}));
+ await Promise.all(chIds.map(async c=>{try{const r=await api(`${YT}playlistItems?part=contentDetails&maxResults=50&playlistId=UU${c.slice(2)}`);r.items.forEach(i=>ids.push(i.contentDetails.videoId))}catch(e){}}));
  const need=ids.filter(i=>!vidCache[i]);for(let i=0;i<need.length;i+=50){const r=await api(`${YT}videos?part=snippet,contentDetails,statistics&id=${need.slice(i,i+50).join(',')}`);
   r.items.forEach(v=>{vidCache[v.id]={id:v.id,title:v.snippet.title,ch:v.snippet.channelTitle,date:v.snippet.publishedAt,thumb:(v.snippet.thumbnails.medium||v.snippet.thumbnails.default).url,dur:iso(v.contentDetails.duration||''),views:+(v.statistics.viewCount||0),live:v.snippet.liveBroadcastContent!=='none'}})}
  return ids.map(i=>vidCache[i]).filter(Boolean)}
