@@ -41,8 +41,9 @@ const nm=(id,orig)=>(S.names&&S.names[id])||orig||(subs.find(x=>x.id===id)||{}).
 const chUrl=id=>`https://www.youtube.com/channel/${id}/videos`;
 function manager(){const names=Object.keys(S.folders),where=c=>names.find(n=>S.folders[n].includes(c))||'';
  const fv=names.map(n=>`<details class="fd"><summary>${esc(n)} <span class="m">(${S.folders[n].length})</span></summary>${S.folders[n].map(c=>`<a class="cl" href="${chUrl(c)}" target="_blank">${esc(nm(c))}</a>`).join('')||'<div class="m cl">empty</div>'}</details>`).join('');
+ $('allv').innerHTML=fv||'<div class="m">No folders yet</div>';
  $('mgr').innerHTML=`<div class="bar"><button id="nf">+ New folder</button>${cur?'<button id="rf">Rename</button><button id="df">Delete</button>':''}</div>`+
- `<details class="fd" open><summary><b>All folders</b></summary>${fv||'<div class="m cl">none</div>'}</details><div class="m" style="padding:4px 0">Channels</div>`+
+ 
  subs.map(s=>{const cn=S.names&&S.names[s.id];return `<div class="ch"><img src="${s.thumb}"><a class="cn" href="${chUrl(s.id)}" target="_blank">${esc(nm(s.id,s.title))}${cn?' <span class="m">✎</span>':''}</a><button class="rn" data-c="${s.id}" title="Rename">✎</button>${cn?`<button class="rs" data-c="${s.id}" title="Reset">↺</button>`:''}<select data-c="${s.id}"><option value="">—</option>${names.map(n=>`<option ${where(s.id)===n?'selected':''}>${esc(n)}</option>`).join('')}</select></div>`}).join('');
  $('nf').onclick=()=>{const n=prompt('Folder name');if(n&&!S.folders[n]){S.folders[n]=[];cur=n;save();tabs();manager()}};
  if(cur){$('rf').onclick=()=>{const n=prompt('Rename',cur);if(n&&!S.folders[n]){S.folders[n]=S.folders[cur];delete S.folders[cur];cur=n;save();tabs();manager()}};
@@ -51,11 +52,13 @@ function manager(){const names=Object.keys(S.folders),where=c=>names.find(n=>S.f
  $('mgr').querySelectorAll('.rs').forEach(b=>b.onclick=()=>{delete S.names[b.dataset.c];save();manager()});
  $('mgr').querySelectorAll('select').forEach(sel=>sel.onchange=()=>{const c=sel.dataset.c;for(const n in S.folders)S.folders[n]=S.folders[n].filter(x=>x!==c);if(sel.value)S.folders[sel.value].push(c);save();manager()})}
 function syncBtns(){$('shorts').classList.toggle('on',prefs.shorts);$('view').textContent=prefs.view==='grid'?'List':'Grid';$('feed').className=prefs.view;$('sort').value=prefs.sort}
-$('tabs').onclick=e=>{const f=e.target.dataset.f;if(f!=null){cur=decodeURIComponent(f);$('mgr').classList.remove('show');render()}};
+$('tabs').onclick=e=>{const f=e.target.dataset.f;if(f!=null){cur=decodeURIComponent(f);closeViews();render()}};
 $('sort').onchange=e=>{prefs.sort=e.target.value;savePrefs();render()};
 $('shorts').onclick=()=>{prefs.shorts=!prefs.shorts;savePrefs();syncBtns();render()};
 $('view').onclick=()=>{prefs.view=prefs.view==='grid'?'list':'grid';savePrefs();syncBtns()};
-$('manage').onclick=()=>{const m=$('mgr');m.classList.toggle('show');if(m.classList.contains('show'))manager();else render()};
+function closeViews(){$('mgr').classList.remove('show');$('allv').classList.remove('show');document.body.classList.remove('ov')}
+function openView(id){const was=$(id).classList.contains('show');closeViews();if(was)return render();$(id).classList.add('show');document.body.classList.add('ov');manager()}
+$('manage').onclick=()=>openView('mgr');$('all').onclick=()=>openView('allv');
 $('login').onclick=start;
 async function start(){try{st('Signing in…');await auth(localStorage.getItem('signedIn')?'':'consent');$('login').style.display='none';await loadRemote();await loadSubs();render()}catch(e){st('Error: '+(e.message||e.error||e))}}
 syncBtns();tabs();
