@@ -65,3 +65,5 @@ syncBtns();tabs();
 window.addEventListener('load',()=>{if(window.APP_CONFIG.CLIENT_ID.startsWith('YOUR_'))return st('Set CLIENT_ID in config.js');
  client=google.accounts.oauth2.initTokenClient({client_id:APP_CONFIG.CLIENT_ID,scope:SCOPES,callback:()=>{}});st('Tap Sign in')});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+if(localStorage.getItem('narrow')==='1')document.documentElement.classList.add('narrow');
+$('narrow').onclick=()=>localStorage.setItem('narrow',document.documentElement.classList.toggle('narrow')?'1':'0');
