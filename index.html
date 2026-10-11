@@ -18,11 +18,11 @@ button,select{background:#222;color:#eee;border:1px solid #333;border-radius:6px
 #feed.list .ti{-webkit-line-clamp:1;flex:1;margin:0}#feed.list .m{white-space:nowrap}
 #mgr{display:none;padding:6px}#mgr.show{display:block}.ch{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid #1a1a1a}.ch img{width:24px;height:24px;border-radius:50%}.ch span{flex:1}
 .ch span,.ch .cn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#eee;text-decoration:none}.ch button{padding:2px 6px}.fd summary{padding:3px 0;cursor:pointer}.fd .fd{margin-left:8px}.cl{display:block;padding:2px 0 2px 16px;color:#8ab4f8;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar+.bar{padding-top:0}#shorts.on{background:#c00;border-color:#c00}
 #st{color:#999;padding:6px}
 </style></head><body>
-<header><div class="bar"><b>SubShelf</b><span style="flex:1"></span>
-<select id="sort"><option value="recent">Recent</option><option value="popular">Popular</option></select>
-<button id="shorts">Shorts: hidden</button><button id="view">List</button><button id="manage">Folders</button><button id="login">Sign in</button></div>
+<header><div class="bar"><b>SubShelf</b><span style="flex:1"></span><button id="shorts">Shorts</button><button id="manage">Folders</button><button id="login">Sign in</button></div>
+<div class="bar"><select id="sort"><option value="recent">Recent</option><option value="popular">Popular</option></select><button id="view">List</button></div>
 <div id="tabs"></div></header>
 <div id="mgr"></div><div id="st"></div><div id="feed" class="grid"></div>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
