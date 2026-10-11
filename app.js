@@ -50,7 +50,7 @@ function manager(){const names=Object.keys(S.folders),where=c=>names.find(n=>S.f
  $('mgr').querySelectorAll('.rn').forEach(b=>b.onclick=()=>{const c=b.dataset.c,o=(subs.find(x=>x.id===c)||{}).title;const n=prompt('Channel name (blank = original: '+o+')',nm(c,o));if(n===null)return;S.names=S.names||{};const t=n.trim();if(t&&t!==o)S.names[c]=t;else delete S.names[c];save();manager()});
  $('mgr').querySelectorAll('.rs').forEach(b=>b.onclick=()=>{delete S.names[b.dataset.c];save();manager()});
  $('mgr').querySelectorAll('select').forEach(sel=>sel.onchange=()=>{const c=sel.dataset.c;for(const n in S.folders)S.folders[n]=S.folders[n].filter(x=>x!==c);if(sel.value)S.folders[sel.value].push(c);save();manager()})}
-function syncBtns(){$('shorts').textContent='Shorts: '+(prefs.shorts?'shown':'hidden');$('view').textContent=prefs.view==='grid'?'List':'Grid';$('feed').className=prefs.view;$('sort').value=prefs.sort}
+function syncBtns(){$('shorts').classList.toggle('on',prefs.shorts);$('view').textContent=prefs.view==='grid'?'List':'Grid';$('feed').className=prefs.view;$('sort').value=prefs.sort}
 $('tabs').onclick=e=>{const f=e.target.dataset.f;if(f!=null){cur=decodeURIComponent(f);$('mgr').classList.remove('show');render()}};
 $('sort').onchange=e=>{prefs.sort=e.target.value;savePrefs();render()};
 $('shorts').onclick=()=>{prefs.shorts=!prefs.shorts;savePrefs();syncBtns();render()};
