@@ -26,7 +26,7 @@ const ago=d=>{const s=(Date.now()-new Date(d))/1000;return s<3600?(s/60|0)+'m':s
 async function folderVideos(chIds){const ids=[];
  await Promise.all(chIds.map(async c=>{try{const r=await api(`${YT}playlistItems?part=contentDetails&maxResults=50&playlistId=UU${c.slice(2)}`);r.items.forEach(i=>ids.push(i.contentDetails.videoId))}catch(e){}}));
  const need=ids.filter(i=>!vidCache[i]);for(let i=0;i<need.length;i+=50){const r=await api(`${YT}videos?part=snippet,contentDetails,statistics&id=${need.slice(i,i+50).join(',')}`);
-  r.items.forEach(v=>{vidCache[v.id]={id:v.id,title:v.snippet.title,ch:v.snippet.channelTitle,date:v.snippet.publishedAt,thumb:(v.snippet.thumbnails.medium||v.snippet.thumbnails.default).url,dur:iso(v.contentDetails.duration||''),views:+(v.statistics.viewCount||0),live:v.snippet.liveBroadcastContent!=='none'}})}
+  r.items.forEach(v=>{vidCache[v.id]={id:v.id,title:v.snippet.title,ch:v.snippet.channelTitle,cid:v.snippet.channelId,date:v.snippet.publishedAt,thumb:(v.snippet.thumbnails.medium||v.snippet.thumbnails.default).url,dur:iso(v.contentDetails.duration||''),views:+(v.statistics.viewCount||0),live:v.snippet.liveBroadcastContent!=='none'}})}
  return ids.map(i=>vidCache[i]).filter(Boolean)}
 const isShort=v=>(v.dur>0&&v.dur<=180)||/#shorts?\b/i.test(v.title);
 // ---- UI ----
@@ -36,14 +36,20 @@ const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&qu
 let renderId=0;async function render(){tabs();const id=++renderId;$('feed').innerHTML='';if(!cur||!token)return;const ch=S.folders[cur]||[];if(!ch.length)return st('Folder is empty');
  st('Loading…');let vs=await folderVideos(ch);if(id!==renderId)return;if(!prefs.shorts)vs=vs.filter(v=>!isShort(v));
  vs.sort(prefs.sort==='popular'?(a,b)=>b.views-a.views:(a,b)=>new Date(b.date)-new Date(a.date));st('');
- $('feed').innerHTML=vs.map(v=>`<a class="v" href="https://www.youtube.com/watch?v=${v.id}" target="_blank"><div class="t"><img loading="lazy" src="${v.thumb}"><span class="d">${v.live?'LIVE':fmt(v.dur)}</span></div><div class="ti">${esc(v.title)}</div><div class="m">${esc(v.ch)} · ${num(v.views)} · ${ago(v.date)}</div></a>`).join('')}
+ $('feed').innerHTML=vs.map(v=>`<a class="v" href="https://www.youtube.com/watch?v=${v.id}" target="_blank"><div class="t"><img loading="lazy" src="${v.thumb}"><span class="d">${v.live?'LIVE':fmt(v.dur)}</span></div><div class="ti">${esc(v.title)}</div><div class="m">${esc(nm(v.cid,v.ch))} · ${num(v.views)} · ${ago(v.date)}</div></a>`).join('')}
+const nm=(id,orig)=>(S.names&&S.names[id])||orig||(subs.find(x=>x.id===id)||{}).title||id;
+const chUrl=id=>`https://www.youtube.com/channel/${id}/videos`;
 function manager(){const names=Object.keys(S.folders),where=c=>names.find(n=>S.folders[n].includes(c))||'';
+ const fv=names.map(n=>`<details class="fd"><summary>${esc(n)} <span class="m">(${S.folders[n].length})</span></summary>${S.folders[n].map(c=>`<a class="cl" href="${chUrl(c)}" target="_blank">${esc(nm(c))}</a>`).join('')||'<div class="m cl">empty</div>'}</details>`).join('');
  $('mgr').innerHTML=`<div class="bar"><button id="nf">+ New folder</button>${cur?'<button id="rf">Rename</button><button id="df">Delete</button>':''}</div>`+
- subs.map(s=>`<div class="ch"><img src="${s.thumb}"><span>${esc(s.title)}</span><select data-c="${s.id}"><option value="">—</option>${names.map(n=>`<option ${where(s.id)===n?'selected':''}>${esc(n)}</option>`).join('')}</select></div>`).join('');
+ `<details class="fd" open><summary><b>All folders</b></summary>${fv||'<div class="m cl">none</div>'}</details><div class="m" style="padding:4px 0">Channels</div>`+
+ subs.map(s=>{const cn=S.names&&S.names[s.id];return `<div class="ch"><img src="${s.thumb}"><a class="cn" href="${chUrl(s.id)}" target="_blank">${esc(nm(s.id,s.title))}${cn?' <span class="m">✎</span>':''}</a><button class="rn" data-c="${s.id}" title="Rename">✎</button>${cn?`<button class="rs" data-c="${s.id}" title="Reset">↺</button>`:''}<select data-c="${s.id}"><option value="">—</option>${names.map(n=>`<option ${where(s.id)===n?'selected':''}>${esc(n)}</option>`).join('')}</select></div>`}).join('');
  $('nf').onclick=()=>{const n=prompt('Folder name');if(n&&!S.folders[n]){S.folders[n]=[];cur=n;save();tabs();manager()}};
  if(cur){$('rf').onclick=()=>{const n=prompt('Rename',cur);if(n&&!S.folders[n]){S.folders[n]=S.folders[cur];delete S.folders[cur];cur=n;save();tabs();manager()}};
   $('df').onclick=()=>{if(confirm('Delete '+cur+'?')){delete S.folders[cur];cur=null;save();tabs();manager()}}}
- $('mgr').querySelectorAll('select').forEach(sel=>sel.onchange=()=>{const c=sel.dataset.c;for(const n in S.folders)S.folders[n]=S.folders[n].filter(x=>x!==c);if(sel.value)S.folders[sel.value].push(c);save()})}
+ $('mgr').querySelectorAll('.rn').forEach(b=>b.onclick=()=>{const c=b.dataset.c,o=(subs.find(x=>x.id===c)||{}).title;const n=prompt('Channel name (blank = original: '+o+')',nm(c,o));if(n===null)return;S.names=S.names||{};const t=n.trim();if(t&&t!==o)S.names[c]=t;else delete S.names[c];save();manager()});
+ $('mgr').querySelectorAll('.rs').forEach(b=>b.onclick=()=>{delete S.names[b.dataset.c];save();manager()});
+ $('mgr').querySelectorAll('select').forEach(sel=>sel.onchange=()=>{const c=sel.dataset.c;for(const n in S.folders)S.folders[n]=S.folders[n].filter(x=>x!==c);if(sel.value)S.folders[sel.value].push(c);save();manager()})}
 function syncBtns(){$('shorts').textContent='Shorts: '+(prefs.shorts?'shown':'hidden');$('view').textContent=prefs.view==='grid'?'List':'Grid';$('feed').className=prefs.view;$('sort').value=prefs.sort}
 $('tabs').onclick=e=>{const f=e.target.dataset.f;if(f!=null){cur=decodeURIComponent(f);if($('mgr').classList.contains('show'))manager();render()}};
 $('sort').onchange=e=>{prefs.sort=e.target.value;savePrefs();render()};
