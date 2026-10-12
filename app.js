@@ -40,10 +40,16 @@ let renderId=0;async function render(){tabs();const id=++renderId;$('feed').inne
  vs.sort(prefs.sort==='popular'?(a,b)=>b.views-a.views:(a,b)=>new Date(b.date)-new Date(a.date));st('');
  $('feed').innerHTML=vs.map(v=>`<a class="v" href="https://www.youtube.com/watch?v=${v.id}" target="_blank"><div class="t"><img loading="lazy" src="${v.thumb}"><span class="d">${v.live?'LIVE':fmt(v.dur)}</span></div><div class="ti">${esc(v.title)}</div><div class="m">${esc(nm(v.cid,v.ch))} · ${num(v.views)} · ${ago(v.date)}</div></a>`).join('')}
 const nm=(id,orig)=>(S.names&&S.names[id])||orig||(subs.find(x=>x.id===id)||{}).title||id;
+const chStats={};
+const sn=n=>n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1).replace(/\.0$/,'')+'M':n>=1e3?(n/1e3).toFixed(1).replace(/\.0$/,'')+'K':String(n);
+async function loadStats(ids){const need=[...new Set(ids)].filter(i=>!chStats[i]);for(let i=0;i<need.length;i+=50){const r=await api(`${YT}channels?part=statistics&maxResults=50&id=${need.slice(i,i+50).join(',')}`);(r.items||[]).forEach(c=>{const x=c.statistics;chStats[c.id]={subs:x.hiddenSubscriberCount?null:+x.subscriberCount,vids:+x.videoCount,views:+x.viewCount}})}}
+function statTxt(c){const x=chStats[c];if(!x)return'';return `${x.subs==null?'hidden':sn(x.subs)} subs · ${sn(x.vids)} vids · ${sn(x.views)} views`}
+function allView(fetch=true){const names=Object.keys(S.folders),open=new Set([...$('allv').querySelectorAll('details[open]')].map(d=>d.dataset.f));
+ $('allv').innerHTML=`<div class="bar" style="padding:0 0 4px"><button id="xa">Expand all</button><button id="ca">Collapse all</button></div>`+(names.map(n=>`<details class="fd" data-f="${esc(n)}" ${open.has(n)?'open':''}><summary>${esc(n)} <span class="m">(${S.folders[n].length})</span></summary>${S.folders[n].map(c=>`<div class="cr"><a class="cl" href="${chUrl(c)}" target="_blank">${esc(nm(c))}</a><span class="m cs">${statTxt(c)}</span></div>`).join('')||'<div class="m cl">empty</div>'}</details>`).join('')||'<div class="m">No folders yet</div>');
+ $('xa').onclick=()=>$('allv').querySelectorAll('details').forEach(d=>d.open=true);$('ca').onclick=()=>$('allv').querySelectorAll('details').forEach(d=>d.open=false);
+ if(fetch&&token)loadStats(names.flatMap(n=>S.folders[n])).then(()=>{if($('allv').classList.contains('show'))allView(false)}).catch(()=>{})}
 const chUrl=id=>`https://www.youtube.com/channel/${id}/videos`;
 function manager(){const names=Object.keys(S.folders),where=c=>names.find(n=>S.folders[n].includes(c))||'';
- const fv=names.map(n=>`<details class="fd"><summary>${esc(n)} <span class="m">(${S.folders[n].length})</span></summary>${S.folders[n].map(c=>`<a class="cl" href="${chUrl(c)}" target="_blank">${esc(nm(c))}</a>`).join('')||'<div class="m cl">empty</div>'}</details>`).join('');
- $('allv').innerHTML=fv||'<div class="m">No folders yet</div>';
  $('mgr').innerHTML=`<div class="bar"><button id="nf">+ New folder</button>${cur?'<button id="rf">Rename</button><button id="df">Delete</button>':''}</div>`+
  
  subs.map(s=>{const cn=S.names&&S.names[s.id];return `<div class="ch"><img src="${s.thumb}"><a class="cn" href="${chUrl(s.id)}" target="_blank">${esc(nm(s.id,s.title))}${cn?' <span class="m">✎</span>':''}</a><button class="rn" data-c="${s.id}" title="Rename">✎</button>${cn?`<button class="rs" data-c="${s.id}" title="Reset">↺</button>`:''}<select data-c="${s.id}"><option value="">—</option>${names.map(n=>`<option ${where(s.id)===n?'selected':''}>${esc(n)}</option>`).join('')}</select></div>`}).join('');
@@ -60,7 +66,7 @@ $('sort').onchange=e=>{prefs.sort=e.target.value;savePrefs();render()};
 $('shorts').onclick=()=>{prefs.shorts=!prefs.shorts;savePrefs();syncBtns();render()};
 $('view').onclick=()=>{prefs.view=prefs.view==='grid'?'list':'grid';savePrefs();syncBtns()};
 function closeViews(){$('mgr').classList.remove('show');$('allv').classList.remove('show');document.body.classList.remove('ov')}
-function openView(id){const was=$(id).classList.contains('show');closeViews();if(was)return render();$(id).classList.add('show');document.body.classList.add('ov');manager()}
+function openView(id){const was=$(id).classList.contains('show');closeViews();if(was)return render();$(id).classList.add('show');document.body.classList.add('ov');id==='allv'?allView():manager()}
 $('manage').onclick=()=>openView('mgr');$('all').onclick=()=>openView('allv');
 $('login').onclick=start;
 async function start(){try{st('Signing in…');await auth(localStorage.getItem('signedIn')?'':'consent');$('login').style.display='none';await loadRemote();await loadSubs();render()}catch(e){st('Error: '+(e.message||e.error||e))}}
