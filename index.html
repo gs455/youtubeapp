@@ -1,38 +1,76 @@
-<!doctype html><html><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f0f0f"><title>ytshelves</title>
-<script>if(localStorage.getItem("theme")==="light")document.documentElement.classList.add("light")</script>
-<link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon.svg">
-<style>
-*{box-sizing:border-box}body{margin:0;background:#0f0f0f;color:#eee;font:13px -apple-system,system-ui,sans-serif;padding-top:env(safe-area-inset-top)}
-header{position:sticky;top:0;background:#0f0f0f;z-index:5;border-bottom:1px solid #222}
-.bar{display:flex;gap:6px;align-items:center;padding:4px 6px}
-button,select{background:#222;color:#eee;border:1px solid #333;border-radius:6px;padding:4px 8px;font-size:12px}
-#tabs{display:flex;overflow-x:auto;gap:4px;flex:1;min-width:0;scrollbar-width:none}#tabs::-webkit-scrollbar{display:none}.row{display:flex;align-items:flex-end;gap:6px;padding:0 6px 4px}.ctl{display:flex;gap:4px;flex:none;align-items:flex-end}.grp{display:flex;flex-direction:column;align-items:center;gap:1px}.cap{font-size:8px;line-height:9px;letter-spacing:.06em;text-transform:uppercase;color:#888}html.light .cap{color:#666}.grp:has(#chf[style*=none]){display:none}#tabs button{white-space:nowrap}#tabs .on{background:#c00;border-color:#c00;color:#fff}
-#feed.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;padding:6px}
-.v{display:block;color:inherit;text-decoration:none}.t{position:relative}.t img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:6px;display:block}
-.d{position:absolute;right:4px;bottom:4px;background:rgba(0,0,0,.85);font-size:11px;padding:1px 4px;border-radius:3px}
-.ti{font-size:12px;line-height:1.25;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.m{color:#999;font-size:11px}
-#feed.list .v{display:flex;gap:6px;align-items:center;padding:2px 6px;border-bottom:1px solid #1a1a1a}
-#feed.list .t{width:72px;flex:none}#feed.list .t img{border-radius:3px}#feed.list .d{font-size:10px;right:2px;bottom:2px;padding:0 3px}
-#feed.list .ti{-webkit-line-clamp:1;flex:1;margin:0}#feed.list .m{white-space:nowrap}
-#allv{display:none;padding:6px}#allv.show{display:block}body.ov #feed{display:none}@media(min-width:900px){#narrow{display:inline-block}html.narrow{background:#000}html.narrow body{max-width:600px;margin:0 auto;min-height:100vh}}
-#st{display:none}#mgr{display:none;padding:6px}#mgr.show{display:block}.ch{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid #1a1a1a}.ch img{width:24px;height:24px;border-radius:50%}.ch span{flex:1}
-.ch span,.ch .cn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#eee;text-decoration:none}.ch button{padding:2px 6px}.fd summary{padding:3px 0;cursor:pointer}.fd .fd{margin-left:8px}.cl{display:block;padding:2px 0 2px 16px;color:#8ab4f8;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar+.bar{padding-top:0}#shorts{background:#f4b4b4;color:#111;border-color:#f4b4b4}#shorts.on{background:#a8e6a8;border-color:#a8e6a8}
-#narrow{display:none}@media(min-width:900px){#narrow{display:inline-block}html.narrow{background:#000}html.narrow body{max-width:600px;margin:0 auto;min-height:100vh}}
-#st{color:#999;padding:6px}
-.cr{display:flex;align-items:baseline;gap:6px;min-width:0}.cr .cl{flex:1;min-width:0}.cs{flex:none;white-space:nowrap;font-size:10px}
-html.light,html.light body,html.light header{background:#fff;color:#111}html.light header{border-bottom-color:#ddd}
-html.light button,html.light select{background:#f1f1f1;color:#111;border-color:#ccc}
-html.light .m,html.light #st{color:#606060}html.light .d{color:#fff}
-html.light #feed.list .v,html.light .ch{border-bottom-color:#eee}html.light .ch .cn,html.light .ch span{color:#111}html.light .cl{color:#065fd4}
-html.light.narrow{background:#d8d8d8}
-</style></head><body>
-<header><div class="bar"><button id="theme" title="Light/dark theme">☀</button><button id="narrow" title="Phone width">↔</button><span style="flex:1"></span><button id="manage">Folders</button><button id="login">Sign in</button></div>
-<div class="row"><div id="tabs"></div><div class="ctl"><div class="grp"><span class="cap">Channel</span><select id="chf" style="display:none;max-width:110px"></select></div><div class="grp"><span class="cap">Sort</span><select id="sort"><option value="recent">Recent</option><option value="popular">Popular</option></select></div><div class="grp"><span class="cap">View</span><button id="view">List</button></div><div class="grp"><span class="cap">Include</span><button id="shorts">Shorts</button></div></div></div></header>
-<div id="mgr"></div><div id="allv"></div><div id="st"></div><div id="feed" class="grid"></div>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="config.js"></script><script src="app.js"></script>
-</body></html>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f0f0f">
+    <title>ytshelves</title>
+
+    <!-- Apply the saved theme before first paint to avoid a flash -->
+    <script>
+      if (localStorage.getItem("theme") === "light") {
+        document.documentElement.classList.add("light");
+      }
+    </script>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+
+  <body>
+    <header>
+      <!-- Row 1: theme + narrow toggles on the left, Folders + Sign in on the right -->
+      <div class="button-bar">
+        <button id="theme" title="Light/dark theme">☀</button>
+        <button id="narrow" title="Phone width">↔</button>
+        <span class="spacer"></span>
+        <button id="manage">Folders</button>
+        <button id="login">Sign in</button>
+      </div>
+
+      <!-- Row 2: folder tabs on the left, feed controls on the right -->
+      <div class="tabs-row">
+        <div id="tabs"></div>
+        <div class="controls">
+          <div class="control-group">
+            <span class="caption">Channel</span>
+            <select id="channel-filter" style="display:none"></select>
+          </div>
+          <div class="control-group">
+            <span class="caption">Sort</span>
+            <select id="sort">
+              <option value="recent">Recent</option>
+              <option value="popular">Popular</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <span class="caption">View</span>
+            <button id="view">List</button>
+          </div>
+          <div class="control-group">
+            <span class="caption">Include</span>
+            <button id="shorts">Shorts</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div id="manager"></div>
+    <div id="all-view"></div>
+    <div id="status"></div>
+    <div id="feed" class="grid"></div>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="config.js"></script>
+    <script src="js/util.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/youtube.js"></script>
+    <script src="js/feed.js"></script>
+    <script src="js/views.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
