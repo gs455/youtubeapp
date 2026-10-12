@@ -50,9 +50,10 @@ function allView(fetch=true){const names=Object.keys(S.folders),open=new Set([..
  if(fetch&&token)loadStats(names.flatMap(n=>S.folders[n])).then(()=>{if($('allv').classList.contains('show'))allView(false)}).catch(()=>{})}
 const chUrl=id=>`https://www.youtube.com/channel/${id}/videos`;
 function manager(){const names=Object.keys(S.folders),where=c=>names.find(n=>S.folders[n].includes(c))||'';
- $('mgr').innerHTML=`<div class="bar"><button id="nf">+ New folder</button>${cur?'<button id="rf">Rename</button><button id="df">Delete</button>':''}</div>`+
+ $('mgr').innerHTML=`<div class="bar"><button id="nf">+ New folder</button>${cur?'<button id="rf">Rename</button><button id="df">Delete</button>':''}<button id="all" style="margin-left:auto">All</button></div>`+
  
  subs.map(s=>{const cn=S.names&&S.names[s.id];return `<div class="ch"><img src="${s.thumb}"><a class="cn" href="${chUrl(s.id)}" target="_blank">${esc(nm(s.id,s.title))}${cn?' <span class="m">✎</span>':''}</a><button class="rn" data-c="${s.id}" title="Rename">✎</button>${cn?`<button class="rs" data-c="${s.id}" title="Reset">↺</button>`:''}<select data-c="${s.id}"><option value="">—</option>${names.map(n=>`<option ${where(s.id)===n?'selected':''}>${esc(n)}</option>`).join('')}</select></div>`}).join('');
+ $('all').onclick=()=>openView('allv');
  $('nf').onclick=()=>{const n=prompt('Folder name');if(n&&!S.folders[n]){S.folders[n]=[];cur=n;save();tabs();manager()}};
  if(cur){$('rf').onclick=()=>{const n=prompt('Rename',cur);if(n&&!S.folders[n]){S.folders[n]=S.folders[cur];delete S.folders[cur];cur=n;save();tabs();manager()}};
   $('df').onclick=()=>{if(confirm('Delete '+cur+'?')){delete S.folders[cur];cur=null;save();tabs();manager()}}}
@@ -67,7 +68,7 @@ $('shorts').onclick=()=>{prefs.shorts=!prefs.shorts;savePrefs();syncBtns();rende
 $('view').onclick=()=>{prefs.view=prefs.view==='grid'?'list':'grid';savePrefs();syncBtns()};
 function closeViews(){$('mgr').classList.remove('show');$('allv').classList.remove('show');document.body.classList.remove('ov')}
 function openView(id){const was=$(id).classList.contains('show');closeViews();if(was)return render();$(id).classList.add('show');document.body.classList.add('ov');id==='allv'?allView():manager()}
-$('manage').onclick=()=>openView('mgr');$('all').onclick=()=>openView('allv');
+$('manage').onclick=()=>openView('mgr');
 $('login').onclick=start;
 async function start(){try{st('Signing in…');await auth(localStorage.getItem('signedIn')?'':'consent');$('login').style.display='none';await loadRemote();await loadSubs();render()}catch(e){st('Error: '+(e.message||e.error||e))}}
 syncBtns();tabs();
