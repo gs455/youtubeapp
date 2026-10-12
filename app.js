@@ -1,6 +1,6 @@
 const YT='https://www.googleapis.com/youtube/v3/',SCOPES='https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/drive.appdata';
 const $=id=>document.getElementById(id);
-let token=null,tokenExp=0,client,subs=[],cur=null;
+let chFilter='',token=null,tokenExp=0,client,subs=[],cur=null;
 let S=JSON.parse(localStorage.getItem('state')||'{"folders":{},"updated":0}');
 let prefs=JSON.parse(localStorage.getItem('prefs')||'{"shorts":false,"view":"grid","sort":"recent"}');
 const vidCache={};
@@ -33,8 +33,10 @@ const isShort=v=>(v.dur>0&&v.dur<=180)||/#shorts?\b/i.test(v.title);
 function tabs(){const names=Object.keys(S.folders);if(!names.includes(cur))cur=names[0]||null;
  $('tabs').innerHTML=names.map(n=>`<button class="${n===cur?'on':''}" data-f="${encodeURIComponent(n)}">${esc(n)}</button>`).join('')||'<span class="m">No folders yet — tap Folders</span>'}
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let renderId=0;async function render(){tabs();const id=++renderId;$('feed').innerHTML='';if(!cur||!token)return;const ch=S.folders[cur]||[];if(!ch.length)return st('Folder is empty');
- st('Loading…');let vs=await folderVideos(ch);if(id!==renderId)return;if(!prefs.shorts)vs=vs.filter(v=>!isShort(v));
+let renderId=0;async function render(){tabs();const id=++renderId;$('feed').innerHTML='';if(!cur||!token){$('chf').style.display='none';return}const ch=S.folders[cur]||[];const sel=$('chf');sel.style.display='';if(chFilter&&!ch.includes(chFilter))chFilter='';
+ sel.innerHTML='<option value="">All channels</option>'+ch.map(c=>`<option value="${c}" ${c===chFilter?'selected':''}>${esc(nm(c))}</option>`).join('');
+ if(!ch.length)return st('Folder is empty');
+ st('Loading…');let vs=await folderVideos(chFilter?[chFilter]:ch);if(id!==renderId)return;if(!prefs.shorts)vs=vs.filter(v=>!isShort(v));
  vs.sort(prefs.sort==='popular'?(a,b)=>b.views-a.views:(a,b)=>new Date(b.date)-new Date(a.date));st('');
  $('feed').innerHTML=vs.map(v=>`<a class="v" href="https://www.youtube.com/watch?v=${v.id}" target="_blank"><div class="t"><img loading="lazy" src="${v.thumb}"><span class="d">${v.live?'LIVE':fmt(v.dur)}</span></div><div class="ti">${esc(v.title)}</div><div class="m">${esc(nm(v.cid,v.ch))} · ${num(v.views)} · ${ago(v.date)}</div></a>`).join('')}
 const nm=(id,orig)=>(S.names&&S.names[id])||orig||(subs.find(x=>x.id===id)||{}).title||id;
@@ -52,7 +54,8 @@ function manager(){const names=Object.keys(S.folders),where=c=>names.find(n=>S.f
  $('mgr').querySelectorAll('.rs').forEach(b=>b.onclick=()=>{delete S.names[b.dataset.c];save();manager()});
  $('mgr').querySelectorAll('select').forEach(sel=>sel.onchange=()=>{const c=sel.dataset.c;for(const n in S.folders)S.folders[n]=S.folders[n].filter(x=>x!==c);if(sel.value)S.folders[sel.value].push(c);save();manager()})}
 function syncBtns(){$('shorts').classList.toggle('on',prefs.shorts);$('view').textContent=prefs.view==='grid'?'List':'Grid';$('feed').className=prefs.view;$('sort').value=prefs.sort}
-$('tabs').onclick=e=>{const f=e.target.dataset.f;if(f!=null){cur=decodeURIComponent(f);closeViews();render()}};
+$('tabs').onclick=e=>{const f=e.target.dataset.f;if(f!=null){cur=decodeURIComponent(f);chFilter='';closeViews();render()}};
+$('chf').onchange=e=>{chFilter=e.target.value;render()};
 $('sort').onchange=e=>{prefs.sort=e.target.value;savePrefs();render()};
 $('shorts').onclick=()=>{prefs.shorts=!prefs.shorts;savePrefs();syncBtns();render()};
 $('view').onclick=()=>{prefs.view=prefs.view==='grid'?'list':'grid';savePrefs();syncBtns()};
