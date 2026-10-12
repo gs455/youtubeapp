@@ -7,6 +7,7 @@ async function signInAndLoad() {
     const promptMode = localStorage.getItem('signedIn') ? '' : 'consent';
     await requestAccessToken(promptMode);
     byId('login').style.display = 'none';
+    updateTabPlacement();
     await loadStateFromDrive();
     await loadSubscriptions();
     renderFeed();
@@ -75,6 +76,7 @@ if (localStorage.getItem('narrow') === '1') {
 byId('narrow').onclick = () => {
   const isNarrow = document.documentElement.classList.toggle('narrow');
   localStorage.setItem('narrow', isNarrow ? '1' : '0');
+  updateTabPlacement();
 };
 
 // ---- Light/dark theme ----

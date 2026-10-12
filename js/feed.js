@@ -21,6 +21,7 @@ function renderTabs() {
   }).join('');
 
   byId('tabs').innerHTML = tabsHtml || '<span class="muted">No folders yet — tap Folders</span>';
+  updateTabPlacement();
 }
 
 // Fill the CHANNEL dropdown with the current folder's channels.
@@ -37,6 +38,7 @@ function renderChannelFilter(channelIds) {
     return `<option value="${channelId}" ${selected}>${escapeHtml(channelName(channelId))}</option>`;
   });
   dropdown.innerHTML = '<option value="">All channels</option>' + options.join('');
+  updateTabPlacement();
 }
 
 function sortVideos(videos) {
@@ -65,6 +67,7 @@ async function renderFeed() {
 
   if (!currentFolder || !accessToken) {
     byId('channel-filter').style.display = 'none';
+    updateTabPlacement();
     return;
   }
 

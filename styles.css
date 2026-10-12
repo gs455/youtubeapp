@@ -56,47 +56,73 @@ header {
   padding-top: 0;
 }
 
-/* Spacer that pushes the following buttons to the right */
-.spacer {
-  flex: 1;
+/* Single header row: left (toggles + tabs) | centered controls | right.
+   The two 1fr columns are equal, which keeps the middle group centered. */
+.header-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+  gap: 6px;
+  padding: 4px 6px;
 }
 
-/* Second header row: folder tabs on the left, controls on the right */
-.tabs-row {
+.header-left {
   display: flex;
   align-items: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.header-right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
   gap: 6px;
-  padding: 0 6px 4px;
+}
+
+/* Folder tabs followed by the CHANNEL dropdown */
+#tab-strip {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 #tabs {
   display: flex;
-  overflow-x: auto;
   gap: 4px;
-  flex: 1;
-  min-width: 0;
-  scrollbar-width: none;
-}
-
-#tabs::-webkit-scrollbar {
-  display: none;
 }
 
 #tabs button {
   white-space: nowrap;
 }
 
-/* The selected folder tab */
+/* Selected folder tab */
 #tabs .on {
   background: #c00;
   border-color: #c00;
   color: #fff;
 }
 
+/* Second line for the tabs when they don't fit on the top row */
+#tabs-line {
+  padding: 0 6px 4px;
+}
+
+#tabs-line:empty {
+  display: none;
+}
+
+#tabs-line #tab-strip,
+#tabs-line #tabs {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+
 .controls {
   display: flex;
   gap: 4px;
-  flex: none;
   align-items: flex-end;
 }
 
