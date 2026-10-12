@@ -1,0 +1,391 @@
+/* ==========================================================================
+   ytshelves styles
+   Dark theme is the default. Light theme overrides live at the bottom and
+   apply when <html> has the "light" class.
+   ========================================================================== */
+
+/* ---- Base ---------------------------------------------------------------- */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #0f0f0f;
+  color: #eee;
+  font: 13px -apple-system, system-ui, sans-serif;
+  padding-top: env(safe-area-inset-top);
+}
+
+button,
+select {
+  background: #222;
+  color: #eee;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* Small grey secondary text */
+.muted {
+  color: #999;
+  font-size: 11px;
+}
+
+/* ---- Header -------------------------------------------------------------- */
+
+header {
+  position: sticky;
+  top: 0;
+  background: #0f0f0f;
+  z-index: 5;
+  border-bottom: 1px solid #222;
+}
+
+/* A horizontal row of buttons */
+.button-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 6px;
+}
+
+.button-bar + .button-bar {
+  padding-top: 0;
+}
+
+/* Spacer that pushes the following buttons to the right */
+.spacer {
+  flex: 1;
+}
+
+/* Second header row: folder tabs on the left, controls on the right */
+.tabs-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 0 6px 4px;
+}
+
+#tabs {
+  display: flex;
+  overflow-x: auto;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  scrollbar-width: none;
+}
+
+#tabs::-webkit-scrollbar {
+  display: none;
+}
+
+#tabs button {
+  white-space: nowrap;
+}
+
+/* The selected folder tab */
+#tabs .on {
+  background: #c00;
+  border-color: #c00;
+  color: #fff;
+}
+
+.controls {
+  display: flex;
+  gap: 4px;
+  flex: none;
+  align-items: flex-end;
+}
+
+/* A control with a tiny caption above it */
+.control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.caption {
+  font-size: 8px;
+  line-height: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #888;
+}
+
+/* Hide the CHANNEL caption together with its hidden dropdown */
+.control-group:has(#channel-filter[style*="none"]) {
+  display: none;
+}
+
+#channel-filter {
+  max-width: 110px;
+}
+
+/* Shorts toggle: light red = hidden, light green = shown */
+#shorts {
+  background: #f4b4b4;
+  color: #111;
+  border-color: #f4b4b4;
+}
+
+#shorts.on {
+  background: #a8e6a8;
+  border-color: #a8e6a8;
+}
+
+/* ---- Video feed ---------------------------------------------------------- */
+
+#feed.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+  padding: 6px;
+}
+
+.video {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.thumb {
+  position: relative;
+}
+
+.thumb img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+
+/* Duration badge on the thumbnail */
+.duration {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  background: rgba(0, 0, 0, 0.85);
+  font-size: 11px;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.video-title {
+  font-size: 12px;
+  line-height: 1.25;
+  margin-top: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* List view: one compact line per video */
+#feed.list .video {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 2px 6px;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+#feed.list .thumb {
+  width: 72px;
+  flex: none;
+}
+
+#feed.list .thumb img {
+  border-radius: 3px;
+}
+
+#feed.list .duration {
+  font-size: 10px;
+  right: 2px;
+  bottom: 2px;
+  padding: 0 3px;
+}
+
+#feed.list .video-title {
+  -webkit-line-clamp: 1;
+  flex: 1;
+  margin: 0;
+}
+
+#feed.list .muted {
+  white-space: nowrap;
+}
+
+/* Status line (currently kept hidden) */
+#status {
+  display: none;
+  color: #999;
+  padding: 6px;
+}
+
+/* ---- Overlay views: Folders manager and All page ------------------------- */
+
+#manager,
+#all-view {
+  display: none;
+  padding: 6px;
+}
+
+#manager.show,
+#all-view.show {
+  display: block;
+}
+
+/* While a view is open, the feed is hidden */
+body.view-open #feed {
+  display: none;
+}
+
+#all-view .button-bar {
+  padding: 0 0 4px;
+}
+
+/* Folders manager: one row per subscribed channel */
+.channel-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.channel-row img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.channel-row span,
+.channel-row .channel-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #eee;
+  text-decoration: none;
+}
+
+.channel-row button {
+  padding: 2px 6px;
+}
+
+.push-right {
+  margin-left: auto;
+}
+
+/* All page: expandable folders */
+.folder summary {
+  padding: 3px 0;
+  cursor: pointer;
+}
+
+.channel-link {
+  display: block;
+  padding: 2px 0 2px 16px;
+  color: #8ab4f8;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channel-stat-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.channel-stat-row .channel-link {
+  flex: 1;
+  min-width: 0;
+}
+
+.channel-stats {
+  flex: none;
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+/* ---- Desktop narrow mode (phone-width column) ---------------------------- */
+
+#narrow {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  #narrow {
+    display: inline-block;
+  }
+
+  html.narrow {
+    background: #000;
+  }
+
+  html.narrow body {
+    max-width: 600px;
+    margin: 0 auto;
+    min-height: 100vh;
+  }
+}
+
+/* ---- Light theme overrides ----------------------------------------------- */
+
+html.light,
+html.light body,
+html.light header {
+  background: #fff;
+  color: #111;
+}
+
+html.light header {
+  border-bottom-color: #ddd;
+}
+
+html.light button,
+html.light select {
+  background: #f1f1f1;
+  color: #111;
+  border-color: #ccc;
+}
+
+html.light .muted,
+html.light #status {
+  color: #606060;
+}
+
+html.light .caption {
+  color: #666;
+}
+
+html.light .duration {
+  color: #fff;
+}
+
+html.light #feed.list .video,
+html.light .channel-row {
+  border-bottom-color: #eee;
+}
+
+html.light .channel-row .channel-name,
+html.light .channel-row span {
+  color: #111;
+}
+
+html.light .channel-link {
+  color: #065fd4;
+}
+
+html.light.narrow {
+  background: #d8d8d8;
+}
