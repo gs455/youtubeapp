@@ -6,7 +6,7 @@ install it like an app. Live at https://gs455.github.io/ytshelves/
 
 ## What it does
 
-- Signs in with your Google account (read-only YouTube access).
+- Signs in with your Google account (YouTube access, used to read subscriptions and to unsubscribe).
 - Lets you put subscribed channels into folders, shown as tabs at the top.
 - Shows each folder's recent uploads, sorted by Recent or Popular, in a grid
   or a compact one-line list, with a duration badge on every thumbnail.
@@ -44,7 +44,7 @@ There is no build step: the files are served as-is by GitHub Pages.
 1. In [Google Cloud Console](https://console.cloud.google.com/), create a
    project and enable **YouTube Data API v3** and **Google Drive API**.
 2. Configure the OAuth consent screen with the scopes
-   `youtube.readonly` and `drive.appdata`, and add your account as a test user.
+   `youtube` (needed to unsubscribe) and `drive.appdata`, and add your account as a test user.
 3. Create an **OAuth client ID** of type *Web application* with the
    authorized JavaScript origin `https://gs455.github.io`.
 4. Put the client ID in `config.js`.

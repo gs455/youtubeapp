@@ -4,7 +4,7 @@ const YOUTUBE_API = 'https://www.googleapis.com/youtube/v3/';
 const SHORTS_MAX_SECONDS = 180;
 const API_BATCH_SIZE = 50;
 
-let subscriptions = [];        // [{ id, title, thumb }]
+let subscriptions = [];        // [{ id, subscriptionId, title, thumb }]
 const videoCache = {};         // videoId -> video details
 const channelStatsCache = {};  // channelId -> { subs, vids, views }
 
@@ -22,12 +22,18 @@ async function loadSubscriptions() {
     for (const item of page.items) {
       subscriptions.push({
         id: item.snippet.resourceId.channelId,
+        subscriptionId: item.id,
         title: item.snippet.title,
         thumb: item.snippet.thumbnails.default.url,
       });
     }
     pageToken = page.nextPageToken;
   } while (pageToken);
+}
+
+// Delete a subscription on YouTube (subscriptionId comes from subscriptions.list).
+async function deleteSubscription(subscriptionId) {
+  await apiFetch(`${YOUTUBE_API}subscriptions?id=${encodeURIComponent(subscriptionId)}`, { method: 'DELETE' });
 }
 
 // A channel's uploads playlist ID is its channel ID with "UC" -> "UU".

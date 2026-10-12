@@ -4,7 +4,7 @@
 async function signInAndLoad() {
   try {
     showStatus('Signing in…');
-    const promptMode = localStorage.getItem('signedIn') ? '' : 'consent';
+    const promptMode = hasCurrentScopes() ? '' : 'consent';
     await requestAccessToken(promptMode);
     byId('login').style.display = 'none';
     updateTabPlacement();

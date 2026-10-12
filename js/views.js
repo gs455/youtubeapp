@@ -96,6 +96,7 @@ function managerChannelRowHtml(subscription) {
     `<button class="rename-channel" data-channel="${subscription.id}" title="Rename">✎</button>` +
     (hasCustomName ? `<button class="reset-channel" data-channel="${subscription.id}" title="Reset">↺</button>` : '') +
     `<select data-channel="${subscription.id}"><option value="">—</option>${folderOptions}</select>` +
+    `<button class="unsubscribe-channel" data-channel="${subscription.id}" title="Unsubscribe">Unsub</button>` +
     `</div>`;
 }
 
@@ -122,6 +123,9 @@ function renderManager() {
   });
   view.querySelectorAll('.reset-channel').forEach((button) => {
     button.onclick = () => resetChannelName(button.dataset.channel);
+  });
+  view.querySelectorAll('.unsubscribe-channel').forEach((button) => {
+    button.onclick = () => unsubscribeFromChannel(button.dataset.channel);
   });
   view.querySelectorAll('select').forEach((dropdown) => {
     dropdown.onchange = () => assignChannelToFolder(dropdown.dataset.channel, dropdown.value);
@@ -198,4 +202,57 @@ function resetChannelName(channelId) {
   delete appState.names[channelId];
   saveState();
   renderManager();
+}
+
+// ---- Unsubscribe ----
+
+// 403 from YouTube when the token was granted without the full youtube scope.
+function isMissingPermissionError(error) {
+  return error.status === 403 && /insufficient/i.test(error.message);
+}
+
+// Remove a channel from the subscription list and every folder, then redraw.
+function forgetChannel(channelId) {
+  subscriptions = subscriptions.filter((sub) => sub.id !== channelId);
+  for (const name in appState.folders) {
+    appState.folders[name] = appState.folders[name].filter((id) => id !== channelId);
+  }
+  saveState();
+  renderManager();
+  renderTabs();
+}
+
+async function unsubscribeFromChannel(channelId) {
+  const subscription = subscriptions.find((sub) => sub.id === channelId);
+  if (!subscription || !subscription.subscriptionId) {
+    alert('Could not find this subscription. Try signing in again.');
+    return;
+  }
+  if (!confirm('Unsubscribe from ' + channelName(channelId, subscription.title) + '?')) {
+    return;
+  }
+
+  try {
+    await deleteSubscription(subscription.subscriptionId);
+  } catch (error) {
+    if (!isMissingPermissionError(error)) {
+      alert('Unsubscribe failed: ' + error.message);
+      return;
+    }
+
+    // Older sign-in without permission to unsubscribe: ask again, then retry once.
+    if (!confirm('Unsubscribing needs extra permission. Sign in again now?')) {
+      return;
+    }
+    try {
+      localStorage.removeItem('grantedScopes');
+      await requestAccessToken('consent');
+      await deleteSubscription(subscription.subscriptionId);
+    } catch (retryError) {
+      alert('Unsubscribe failed: ' + (retryError.message || retryError.error || retryError));
+      return;
+    }
+  }
+
+  forgetChannel(channelId);
 }
