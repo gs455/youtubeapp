@@ -64,17 +64,41 @@ byId('view').onclick = () => {
 byId('manage').onclick = () => toggleView('manager');
 byId('login').onclick = signInAndLoad;
 
-// ---- Narrow mode (desktop phone-width column) ----
+// ---- Width modes (desktop) ----
+// The saved mode is applied in index.html before first paint.
 
-if (localStorage.getItem('narrow') === '1') {
-  document.documentElement.classList.add('narrow');
+const WIDTH_MODES = ['full', 'medium', 'narrow'];
+const WIDTH_MODE_LABELS = { full: '↔', medium: 'M', narrow: 'N' };
+
+function currentWidthMode() {
+  const saved = localStorage.getItem('widthMode');
+  return WIDTH_MODES.includes(saved) ? saved : 'full';
+}
+
+function applyWidthMode(mode) {
+  const root = document.documentElement;
+  root.classList.remove('width-medium', 'width-narrow');
+  if (mode !== 'full') {
+    root.classList.add('width-' + mode);
+  }
+
+  const nextMode = WIDTH_MODES[(WIDTH_MODES.indexOf(mode) + 1) % WIDTH_MODES.length];
+  const button = byId('narrow');
+  button.textContent = WIDTH_MODE_LABELS[mode];
+  button.title = `Width: ${mode} (tap for ${nextMode})`;
+
+  // The header's left column changed size, so re-check tab wrapping.
+  updateTabPlacement();
 }
 
 byId('narrow').onclick = () => {
-  const isNarrow = document.documentElement.classList.toggle('narrow');
-  localStorage.setItem('narrow', isNarrow ? '1' : '0');
-  updateTabPlacement();
+  const mode = currentWidthMode();
+  const nextMode = WIDTH_MODES[(WIDTH_MODES.indexOf(mode) + 1) % WIDTH_MODES.length];
+  localStorage.setItem('widthMode', nextMode);
+  applyWidthMode(nextMode);
 };
+
+applyWidthMode(currentWidthMode());
 
 // ---- Light/dark theme ----
 // The saved theme is applied in index.html before first paint.
