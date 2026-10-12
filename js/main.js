@@ -10,8 +10,19 @@ async function signInAndLoad() {
     await loadStateFromDrive();
     await loadSubscriptions();
     renderFeed();
+    rerenderOpenView();
   } catch (error) {
     showStatus('Error: ' + (error.message || error.error || error));
+  }
+}
+
+// Redraw the manager or All page if one is open (e.g. once names arrive).
+function rerenderOpenView() {
+  if (byId('manager').classList.contains('show')) {
+    renderManager();
+  }
+  if (byId('all-view').classList.contains('show')) {
+    renderAllView();
   }
 }
 

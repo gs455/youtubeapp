@@ -107,7 +107,7 @@ function renderManager() {
 
   view.innerHTML =
     `<div class="button-bar"><button id="new-folder">+ New folder</button>${folderButtons}` +
-    `<button id="all" class="push-right">All</button></div>` +
+    `<button id="all" class="push-right">All folders</button></div>` +
     subscriptions.map(managerChannelRowHtml).join('');
 
   byId('all').onclick = () => toggleView('all-view');

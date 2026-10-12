@@ -75,6 +75,15 @@ async function renderFeed() {
     return showStatus('Folder is empty');
   }
 
+  // Fetch titles for any channels we can't name yet, then redraw the dropdown.
+  loadMissingChannelTitles(channelIds)
+    .then((fetched) => {
+      if (fetched && generation === renderGeneration) {
+        renderChannelFilter(channelIds);
+      }
+    })
+    .catch(() => {});
+
   showStatus('Loading…');
   let videos = await loadVideosForChannels(channelFilter ? [channelFilter] : channelIds);
 
@@ -90,6 +99,9 @@ async function renderFeed() {
   showStatus('');
 
   byId('feed').innerHTML = videos.map(videoCardHtml).join('');
+
+  // Video details may have supplied missing channel titles.
+  renderChannelFilter(channelIds);
 }
 
 // Reflect saved prefs on the header controls.
