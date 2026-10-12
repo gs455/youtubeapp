@@ -367,7 +367,9 @@ body.view-open #feed {
   font-size: 10px;
 }
 
-/* ---- Desktop narrow mode (phone-width column) ---------------------------- */
+/* ---- Desktop width modes --------------------------------------------------
+   The ↔ button cycles full → medium (900px column) → narrow (600px column).
+   Only shown on wide screens. */
 
 #narrow {
   display: none;
@@ -378,14 +380,23 @@ body.view-open #feed {
     display: inline-block;
   }
 
-  html.narrow {
+  html.width-medium,
+  html.width-narrow {
     background: #000;
   }
 
-  html.narrow body {
-    max-width: 600px;
+  html.width-medium body,
+  html.width-narrow body {
     margin: 0 auto;
     min-height: 100vh;
+  }
+
+  html.width-medium body {
+    max-width: 900px;
+  }
+
+  html.width-narrow body {
+    max-width: 600px;
   }
 }
 
@@ -447,6 +458,7 @@ html.light .channel-link {
   color: #065fd4;
 }
 
-html.light.narrow {
+html.light.width-medium,
+html.light.width-narrow {
   background: #d8d8d8;
 }

@@ -15,7 +15,7 @@ install it like an app. Live at https://gs455.github.io/ytshelves/
 - Lets you give channels custom names.
 - The **All** page (in the Folders manager) lists every folder with its
   channels and their subscriber, video and view counts.
-- Light/dark theme, and a phone-width "narrow mode" on desktop.
+- Light/dark theme, and desktop width modes (full, medium 900px, narrow 600px) on the ↔ button.
 - Folders and custom names sync between devices through a hidden file
   (`folders.json`) in your own Google Drive app-data folder. Nothing is stored
   on any server.

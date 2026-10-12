@@ -8,10 +8,20 @@
     <meta name="theme-color" content="#0f0f0f">
     <title>ytshelves</title>
 
-    <!-- Apply the saved theme before first paint to avoid a flash -->
+    <!-- Apply the saved theme and width mode before first paint to avoid a flash -->
     <script>
       if (localStorage.getItem("theme") === "light") {
         document.documentElement.classList.add("light");
+      }
+
+      // Width mode: "full", "medium" or "narrow". Older versions saved narrow=1.
+      if (!localStorage.getItem("widthMode") && localStorage.getItem("narrow") === "1") {
+        localStorage.setItem("widthMode", "narrow");
+      }
+      localStorage.removeItem("narrow");
+      var savedWidthMode = localStorage.getItem("widthMode");
+      if (savedWidthMode === "medium" || savedWidthMode === "narrow") {
+        document.documentElement.classList.add("width-" + savedWidthMode);
       }
     </script>
 
@@ -27,7 +37,7 @@
       <div class="header-row">
         <div class="header-left" id="header-left">
           <button id="theme" title="Light/dark theme">☀</button>
-          <button id="narrow" title="Phone width">↔</button>
+          <button id="narrow" title="Width: full">↔</button>
           <div id="tab-strip">
             <div id="tabs"></div>
           </div>
