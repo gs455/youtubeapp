@@ -35,15 +35,12 @@ byId('tabs').onclick = (event) => {
     return;
   }
   currentFolder = decodeURIComponent(folder);
-  channelFilter = '';
+  hiddenChannels = new Set();
   closeViews();
   renderFeed();
 };
 
-byId('channel-filter').onchange = (event) => {
-  channelFilter = event.target.value;
-  renderFeed();
-};
+byId('channel-chips').onclick = handleChipClick;
 
 byId('sort').onchange = (event) => {
   prefs.sort = event.target.value;
