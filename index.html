@@ -22,7 +22,7 @@
 
   <body>
     <header>
-      <!-- One row: [toggles + folder tabs + channel filter] [sort/view/shorts] [Folders, Sign in].
+      <!-- One row: [toggles + folder tabs] [sort/view/shorts] [Folders, Sign in].
            When the tabs don't fit, js/layout.js moves #tab-strip down into #tabs-line. -->
       <div class="header-row">
         <div class="header-left" id="header-left">
@@ -30,10 +30,6 @@
           <button id="narrow" title="Phone width">↔</button>
           <div id="tab-strip">
             <div id="tabs"></div>
-            <div class="control-group">
-              <span class="caption">Channel</span>
-              <select id="channel-filter" style="display:none"></select>
-            </div>
           </div>
         </div>
 
@@ -63,6 +59,9 @@
 
       <!-- Second line, used only when the tabs don't fit on the top row -->
       <div id="tabs-line"></div>
+
+      <!-- Channel chips for the selected folder; tap to show/hide a channel -->
+      <div id="channel-chips"></div>
     </header>
 
     <div id="manager"></div>

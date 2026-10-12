@@ -142,13 +142,37 @@ header {
   color: #888;
 }
 
-/* Hide the CHANNEL caption together with its hidden dropdown */
-.control-group:has(#channel-filter[style*="none"]) {
+/* Channel chips row under the tabs */
+#channel-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 0 6px 4px;
+}
+
+#channel-chips:empty {
   display: none;
 }
 
-#channel-filter {
-  max-width: 110px;
+.chip {
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  white-space: nowrap;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #888;
+}
+
+.chip.on {
+  background: #3a3a3a;
+  border-color: #666;
+  color: #fff;
+}
+
+.chip-toggle-all {
+  border-style: dashed;
 }
 
 /* Shorts toggle: light red = hidden, light green = shown */
@@ -405,6 +429,17 @@ html.light .channel-row {
 
 html.light .channel-row .channel-name,
 html.light .channel-row span {
+  color: #111;
+}
+
+html.light .chip {
+  color: #888;
+  background: #fff;
+}
+
+html.light .chip.on {
+  background: #dcdcdc;
+  border-color: #999;
   color: #111;
 }
 

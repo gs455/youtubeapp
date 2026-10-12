@@ -1,7 +1,8 @@
 // ---- Folder tabs and the video feed ---------------------------------------
 
 let currentFolder = null;     // name of the selected folder tab
-let channelFilter = '';       // channel ID to show, or '' for all channels
+let hiddenChannels = new Set(); // channel IDs switched off with the chips
+let folderVideos = [];          // videos loaded for the current folder
 let renderGeneration = 0;     // ignores results from outdated renders
 
 function folderNames() {
@@ -24,21 +25,43 @@ function renderTabs() {
   updateTabPlacement();
 }
 
-// Fill the CHANNEL dropdown with the current folder's channels.
-function renderChannelFilter(channelIds) {
-  const dropdown = byId('channel-filter');
-  dropdown.style.display = '';
-
-  if (channelFilter && !channelIds.includes(channelFilter)) {
-    channelFilter = '';
+// Draw one chip per channel in the folder, plus an All on/off toggle.
+function renderChannelChips(channelIds) {
+  const row = byId('channel-chips');
+  if (!channelIds.length) {
+    row.innerHTML = '';
+    return;
   }
 
-  const options = channelIds.map((channelId) => {
-    const selected = channelId === channelFilter ? 'selected' : '';
-    return `<option value="${channelId}" ${selected}>${escapeHtml(channelName(channelId))}</option>`;
+  const allShown = channelIds.every((id) => !hiddenChannels.has(id));
+  const toggleAll = `<button class="chip chip-toggle-all on" data-toggle-all="1">${allShown ? 'All off' : 'All on'}</button>`;
+  const chips = channelIds.map((channelId) => {
+    const onClass = hiddenChannels.has(channelId) ? '' : 'on';
+    return `<button class="chip ${onClass}" data-channel="${channelId}">${escapeHtml(channelName(channelId))}</button>`;
   });
-  dropdown.innerHTML = '<option value="">All channels</option>' + options.join('');
-  updateTabPlacement();
+  row.innerHTML = toggleAll + chips.join('');
+}
+
+// Chip taps: toggle one channel, or turn all on/off. Redraws from the
+// already-loaded videos, so no extra API calls.
+function handleChipClick(event) {
+  const chip = event.target.closest('.chip');
+  if (!chip) {
+    return;
+  }
+  const channelIds = appState.folders[currentFolder] || [];
+
+  if (chip.dataset.toggleAll) {
+    const allShown = channelIds.every((id) => !hiddenChannels.has(id));
+    hiddenChannels = allShown ? new Set(channelIds) : new Set();
+  } else if (hiddenChannels.has(chip.dataset.channel)) {
+    hiddenChannels.delete(chip.dataset.channel);
+  } else {
+    hiddenChannels.add(chip.dataset.channel);
+  }
+
+  renderChannelChips(channelIds);
+  drawFeedVideos();
 }
 
 function sortVideos(videos) {
@@ -64,47 +87,53 @@ async function renderFeed() {
   renderTabs();
   const generation = ++renderGeneration;
   byId('feed').innerHTML = '';
+  folderVideos = [];
 
   if (!currentFolder || !accessToken) {
-    byId('channel-filter').style.display = 'none';
-    updateTabPlacement();
+    byId('channel-chips').innerHTML = '';
     return;
   }
 
   const channelIds = appState.folders[currentFolder] || [];
-  renderChannelFilter(channelIds);
+  renderChannelChips(channelIds);
 
   if (!channelIds.length) {
     return showStatus('Folder is empty');
   }
 
-  // Fetch titles for any channels we can't name yet, then redraw the dropdown.
+  // Fetch titles for any channels we can't name yet, then redraw the chips.
   loadMissingChannelTitles(channelIds)
     .then((fetched) => {
       if (fetched && generation === renderGeneration) {
-        renderChannelFilter(channelIds);
+        renderChannelChips(channelIds);
       }
     })
     .catch(() => {});
 
   showStatus('Loading…');
-  let videos = await loadVideosForChannels(channelFilter ? [channelFilter] : channelIds);
+  const videos = await loadVideosForChannels(channelIds);
 
   // A newer render started while we were loading; drop these results.
   if (generation !== renderGeneration) {
     return;
   }
 
+  folderVideos = videos;
+  showStatus('');
+  drawFeedVideos();
+
+  // Video details may have supplied missing channel titles.
+  renderChannelChips(channelIds);
+}
+
+// Draw the loaded videos, skipping Shorts (unless shown) and hidden channels.
+function drawFeedVideos() {
+  let videos = folderVideos.filter((video) => !hiddenChannels.has(video.channelId));
   if (!prefs.shorts) {
     videos = videos.filter((video) => !isShort(video));
   }
   sortVideos(videos);
-  showStatus('');
-
   byId('feed').innerHTML = videos.map(videoCardHtml).join('');
-
-  // Video details may have supplied missing channel titles.
-  renderChannelFilter(channelIds);
 }
 
 // Reflect saved prefs on the header controls.
