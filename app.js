@@ -1,6 +1,6 @@
 const YT='https://www.googleapis.com/youtube/v3/',SCOPES='https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/drive.appdata';
 const $=id=>document.getElementById(id);
-let token=null,tokenExp=0,client,subs=[],cur=null;
+let chFilter='',token=null,tokenExp=0,client,subs=[],cur=null;
 let S=JSON.parse(localStorage.getItem('state')||'{"folders":{},"updated":0}');
 let prefs=JSON.parse(localStorage.getItem('prefs')||'{"shorts":false,"view":"grid","sort":"recent"}');
 const vidCache={};
@@ -33,18 +33,27 @@ const isShort=v=>(v.dur>0&&v.dur<=180)||/#shorts?\b/i.test(v.title);
 function tabs(){const names=Object.keys(S.folders);if(!names.includes(cur))cur=names[0]||null;
  $('tabs').innerHTML=names.map(n=>`<button class="${n===cur?'on':''}" data-f="${encodeURIComponent(n)}">${esc(n)}</button>`).join('')||'<span class="m">No folders yet — tap Folders</span>'}
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let renderId=0;async function render(){tabs();const id=++renderId;$('feed').innerHTML='';if(!cur||!token)return;const ch=S.folders[cur]||[];if(!ch.length)return st('Folder is empty');
- st('Loading…');let vs=await folderVideos(ch);if(id!==renderId)return;if(!prefs.shorts)vs=vs.filter(v=>!isShort(v));
+let renderId=0;async function render(){tabs();const id=++renderId;$('feed').innerHTML='';if(!cur||!token){$('chf').style.display='none';return}const ch=S.folders[cur]||[];const sel=$('chf');sel.style.display='';if(chFilter&&!ch.includes(chFilter))chFilter='';
+ sel.innerHTML='<option value="">All channels</option>'+ch.map(c=>`<option value="${c}" ${c===chFilter?'selected':''}>${esc(nm(c))}</option>`).join('');
+ if(!ch.length)return st('Folder is empty');
+ st('Loading…');let vs=await folderVideos(chFilter?[chFilter]:ch);if(id!==renderId)return;if(!prefs.shorts)vs=vs.filter(v=>!isShort(v));
  vs.sort(prefs.sort==='popular'?(a,b)=>b.views-a.views:(a,b)=>new Date(b.date)-new Date(a.date));st('');
  $('feed').innerHTML=vs.map(v=>`<a class="v" href="https://www.youtube.com/watch?v=${v.id}" target="_blank"><div class="t"><img loading="lazy" src="${v.thumb}"><span class="d">${v.live?'LIVE':fmt(v.dur)}</span></div><div class="ti">${esc(v.title)}</div><div class="m">${esc(nm(v.cid,v.ch))} · ${num(v.views)} · ${ago(v.date)}</div></a>`).join('')}
 const nm=(id,orig)=>(S.names&&S.names[id])||orig||(subs.find(x=>x.id===id)||{}).title||id;
+const chStats={};
+const sn=n=>n>=1e9?(n/1e9).toFixed(1)+'B':n>=1e6?(n/1e6).toFixed(1).replace(/\.0$/,'')+'M':n>=1e3?(n/1e3).toFixed(1).replace(/\.0$/,'')+'K':String(n);
+async function loadStats(ids){const need=[...new Set(ids)].filter(i=>!chStats[i]);for(let i=0;i<need.length;i+=50){const r=await api(`${YT}channels?part=statistics&maxResults=50&id=${need.slice(i,i+50).join(',')}`);(r.items||[]).forEach(c=>{const x=c.statistics;chStats[c.id]={subs:x.hiddenSubscriberCount?null:+x.subscriberCount,vids:+x.videoCount,views:+x.viewCount}})}}
+function statTxt(c){const x=chStats[c];if(!x)return'';return `${x.subs==null?'hidden':sn(x.subs)} subs · ${sn(x.vids)} vids · ${sn(x.views)} views`}
+function allView(fetch=true){const names=Object.keys(S.folders),open=new Set([...$('allv').querySelectorAll('details[open]')].map(d=>d.dataset.f));
+ $('allv').innerHTML=`<div class="bar" style="padding:0 0 4px"><button id="xa">Expand all</button><button id="ca">Collapse all</button></div>`+(names.map(n=>`<details class="fd" data-f="${esc(n)}" ${open.has(n)?'open':''}><summary>${esc(n)} <span class="m">(${S.folders[n].length})</span></summary>${S.folders[n].map(c=>`<div class="cr"><a class="cl" href="${chUrl(c)}" target="_blank">${esc(nm(c))}</a><span class="m cs">${statTxt(c)}</span></div>`).join('')||'<div class="m cl">empty</div>'}</details>`).join('')||'<div class="m">No folders yet</div>');
+ $('xa').onclick=()=>$('allv').querySelectorAll('details').forEach(d=>d.open=true);$('ca').onclick=()=>$('allv').querySelectorAll('details').forEach(d=>d.open=false);
+ if(fetch&&token)loadStats(names.flatMap(n=>S.folders[n])).then(()=>{if($('allv').classList.contains('show'))allView(false)}).catch(()=>{})}
 const chUrl=id=>`https://www.youtube.com/channel/${id}/videos`;
 function manager(){const names=Object.keys(S.folders),where=c=>names.find(n=>S.folders[n].includes(c))||'';
- const fv=names.map(n=>`<details class="fd"><summary>${esc(n)} <span class="m">(${S.folders[n].length})</span></summary>${S.folders[n].map(c=>`<a class="cl" href="${chUrl(c)}" target="_blank">${esc(nm(c))}</a>`).join('')||'<div class="m cl">empty</div>'}</details>`).join('');
- $('allv').innerHTML=fv||'<div class="m">No folders yet</div>';
- $('mgr').innerHTML=`<div class="bar"><button id="nf">+ New folder</button>${cur?'<button id="rf">Rename</button><button id="df">Delete</button>':''}</div>`+
+ $('mgr').innerHTML=`<div class="bar"><button id="nf">+ New folder</button>${cur?'<button id="rf">Rename</button><button id="df">Delete</button>':''}<button id="all" style="margin-left:auto">All</button></div>`+
  
  subs.map(s=>{const cn=S.names&&S.names[s.id];return `<div class="ch"><img src="${s.thumb}"><a class="cn" href="${chUrl(s.id)}" target="_blank">${esc(nm(s.id,s.title))}${cn?' <span class="m">✎</span>':''}</a><button class="rn" data-c="${s.id}" title="Rename">✎</button>${cn?`<button class="rs" data-c="${s.id}" title="Reset">↺</button>`:''}<select data-c="${s.id}"><option value="">—</option>${names.map(n=>`<option ${where(s.id)===n?'selected':''}>${esc(n)}</option>`).join('')}</select></div>`}).join('');
+ $('all').onclick=()=>openView('allv');
  $('nf').onclick=()=>{const n=prompt('Folder name');if(n&&!S.folders[n]){S.folders[n]=[];cur=n;save();tabs();manager()}};
  if(cur){$('rf').onclick=()=>{const n=prompt('Rename',cur);if(n&&!S.folders[n]){S.folders[n]=S.folders[cur];delete S.folders[cur];cur=n;save();tabs();manager()}};
   $('df').onclick=()=>{if(confirm('Delete '+cur+'?')){delete S.folders[cur];cur=null;save();tabs();manager()}}}
@@ -52,13 +61,14 @@ function manager(){const names=Object.keys(S.folders),where=c=>names.find(n=>S.f
  $('mgr').querySelectorAll('.rs').forEach(b=>b.onclick=()=>{delete S.names[b.dataset.c];save();manager()});
  $('mgr').querySelectorAll('select').forEach(sel=>sel.onchange=()=>{const c=sel.dataset.c;for(const n in S.folders)S.folders[n]=S.folders[n].filter(x=>x!==c);if(sel.value)S.folders[sel.value].push(c);save();manager()})}
 function syncBtns(){$('shorts').classList.toggle('on',prefs.shorts);$('view').textContent=prefs.view==='grid'?'List':'Grid';$('feed').className=prefs.view;$('sort').value=prefs.sort}
-$('tabs').onclick=e=>{const f=e.target.dataset.f;if(f!=null){cur=decodeURIComponent(f);closeViews();render()}};
+$('tabs').onclick=e=>{const f=e.target.dataset.f;if(f!=null){cur=decodeURIComponent(f);chFilter='';closeViews();render()}};
+$('chf').onchange=e=>{chFilter=e.target.value;render()};
 $('sort').onchange=e=>{prefs.sort=e.target.value;savePrefs();render()};
 $('shorts').onclick=()=>{prefs.shorts=!prefs.shorts;savePrefs();syncBtns();render()};
 $('view').onclick=()=>{prefs.view=prefs.view==='grid'?'list':'grid';savePrefs();syncBtns()};
 function closeViews(){$('mgr').classList.remove('show');$('allv').classList.remove('show');document.body.classList.remove('ov')}
-function openView(id){const was=$(id).classList.contains('show');closeViews();if(was)return render();$(id).classList.add('show');document.body.classList.add('ov');manager()}
-$('manage').onclick=()=>openView('mgr');$('all').onclick=()=>openView('allv');
+function openView(id){const was=$(id).classList.contains('show');closeViews();if(was)return render();$(id).classList.add('show');document.body.classList.add('ov');id==='allv'?allView():manager()}
+$('manage').onclick=()=>openView('mgr');
 $('login').onclick=start;
 async function start(){try{st('Signing in…');await auth(localStorage.getItem('signedIn')?'':'consent');$('login').style.display='none';await loadRemote();await loadSubs();render()}catch(e){st('Error: '+(e.message||e.error||e))}}
 syncBtns();tabs();
