@@ -67,3 +67,5 @@ window.addEventListener('load',()=>{if(window.APP_CONFIG.CLIENT_ID.startsWith('Y
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 if(localStorage.getItem('narrow')==='1')document.documentElement.classList.add('narrow');
 $('narrow').onclick=()=>localStorage.setItem('narrow',document.documentElement.classList.toggle('narrow')?'1':'0');
+function themeBtn(){const l=document.documentElement.classList.contains('light');$('theme').textContent=l?'☾':'☀';document.querySelector('meta[name=theme-color]').content=l?'#ffffff':'#0f0f0f'}
+$('theme').onclick=()=>{localStorage.setItem('theme',document.documentElement.classList.toggle('light')?'light':'dark');themeBtn()};themeBtn();
