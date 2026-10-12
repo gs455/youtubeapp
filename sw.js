@@ -2,7 +2,7 @@
 // Strategy: network first, falling back to the cached copy.
 // Bump CACHE_NAME whenever files change so devices pick up the update.
 
-const CACHE_NAME = 'ytshelves-v9';
+const CACHE_NAME = 'ytshelves-v10';
 
 const APP_FILES = [
   './',
@@ -13,6 +13,7 @@ const APP_FILES = [
   'js/auth.js',
   'js/storage.js',
   'js/youtube.js',
+  'js/layout.js',
   'js/feed.js',
   'js/views.js',
   'js/main.js',
