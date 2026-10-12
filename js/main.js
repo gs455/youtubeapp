@@ -7,11 +7,23 @@ async function signInAndLoad() {
     const promptMode = localStorage.getItem('signedIn') ? '' : 'consent';
     await requestAccessToken(promptMode);
     byId('login').style.display = 'none';
+    updateTabPlacement();
     await loadStateFromDrive();
     await loadSubscriptions();
     renderFeed();
+    rerenderOpenView();
   } catch (error) {
     showStatus('Error: ' + (error.message || error.error || error));
+  }
+}
+
+// Redraw the manager or All page if one is open (e.g. once names arrive).
+function rerenderOpenView() {
+  if (byId('manager').classList.contains('show')) {
+    renderManager();
+  }
+  if (byId('all-view').classList.contains('show')) {
+    renderAllView();
   }
 }
 
@@ -64,6 +76,7 @@ if (localStorage.getItem('narrow') === '1') {
 byId('narrow').onclick = () => {
   const isNarrow = document.documentElement.classList.toggle('narrow');
   localStorage.setItem('narrow', isNarrow ? '1' : '0');
+  updateTabPlacement();
 };
 
 // ---- Light/dark theme ----

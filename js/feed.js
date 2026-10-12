@@ -21,6 +21,7 @@ function renderTabs() {
   }).join('');
 
   byId('tabs').innerHTML = tabsHtml || '<span class="muted">No folders yet — tap Folders</span>';
+  updateTabPlacement();
 }
 
 // Fill the CHANNEL dropdown with the current folder's channels.
@@ -37,6 +38,7 @@ function renderChannelFilter(channelIds) {
     return `<option value="${channelId}" ${selected}>${escapeHtml(channelName(channelId))}</option>`;
   });
   dropdown.innerHTML = '<option value="">All channels</option>' + options.join('');
+  updateTabPlacement();
 }
 
 function sortVideos(videos) {
@@ -65,6 +67,7 @@ async function renderFeed() {
 
   if (!currentFolder || !accessToken) {
     byId('channel-filter').style.display = 'none';
+    updateTabPlacement();
     return;
   }
 
@@ -74,6 +77,15 @@ async function renderFeed() {
   if (!channelIds.length) {
     return showStatus('Folder is empty');
   }
+
+  // Fetch titles for any channels we can't name yet, then redraw the dropdown.
+  loadMissingChannelTitles(channelIds)
+    .then((fetched) => {
+      if (fetched && generation === renderGeneration) {
+        renderChannelFilter(channelIds);
+      }
+    })
+    .catch(() => {});
 
   showStatus('Loading…');
   let videos = await loadVideosForChannels(channelFilter ? [channelFilter] : channelIds);
@@ -90,6 +102,9 @@ async function renderFeed() {
   showStatus('');
 
   byId('feed').innerHTML = videos.map(videoCardHtml).join('');
+
+  // Video details may have supplied missing channel titles.
+  renderChannelFilter(channelIds);
 }
 
 // Reflect saved prefs on the header controls.

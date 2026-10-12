@@ -22,23 +22,22 @@
 
   <body>
     <header>
-      <!-- Row 1: theme + narrow toggles on the left, Folders + Sign in on the right -->
-      <div class="button-bar">
-        <button id="theme" title="Light/dark theme">☀</button>
-        <button id="narrow" title="Phone width">↔</button>
-        <span class="spacer"></span>
-        <button id="manage">Folders</button>
-        <button id="login">Sign in</button>
-      </div>
-
-      <!-- Row 2: folder tabs on the left, feed controls on the right -->
-      <div class="tabs-row">
-        <div id="tabs"></div>
-        <div class="controls">
-          <div class="control-group">
-            <span class="caption">Channel</span>
-            <select id="channel-filter" style="display:none"></select>
+      <!-- One row: [toggles + folder tabs + channel filter] [sort/view/shorts] [Folders, Sign in].
+           When the tabs don't fit, js/layout.js moves #tab-strip down into #tabs-line. -->
+      <div class="header-row">
+        <div class="header-left" id="header-left">
+          <button id="theme" title="Light/dark theme">☀</button>
+          <button id="narrow" title="Phone width">↔</button>
+          <div id="tab-strip">
+            <div id="tabs"></div>
+            <div class="control-group">
+              <span class="caption">Channel</span>
+              <select id="channel-filter" style="display:none"></select>
+            </div>
           </div>
+        </div>
+
+        <div class="controls">
           <div class="control-group">
             <span class="caption">Sort</span>
             <select id="sort">
@@ -55,7 +54,15 @@
             <button id="shorts">Shorts</button>
           </div>
         </div>
+
+        <div class="header-right">
+          <button id="manage">Folders</button>
+          <button id="login">Sign in</button>
+        </div>
       </div>
+
+      <!-- Second line, used only when the tabs don't fit on the top row -->
+      <div id="tabs-line"></div>
     </header>
 
     <div id="manager"></div>
@@ -69,6 +76,7 @@
     <script src="js/auth.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/youtube.js"></script>
+    <script src="js/layout.js"></script>
     <script src="js/feed.js"></script>
     <script src="js/views.js"></script>
     <script src="js/main.js"></script>

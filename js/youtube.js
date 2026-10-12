@@ -8,6 +8,10 @@ let subscriptions = [];        // [{ id, title, thumb }]
 const videoCache = {};         // videoId -> video details
 const channelStatsCache = {};  // channelId -> { subs, vids, views }
 
+// channelId -> channel title from channels.list, kept on this device so
+// names show even for channels missing from the subscriptions list.
+const channelTitleCache = JSON.parse(localStorage.getItem('channelTitles') || '{}');
+
 // Load every subscribed channel, 50 per page.
 async function loadSubscriptions() {
   subscriptions = [];
@@ -60,6 +64,10 @@ async function fetchVideoDetails(videoIds) {
         views: +(video.statistics.viewCount || 0),
         isLive: video.snippet.liveBroadcastContent !== 'none',
       };
+      // Remember the channel title as a fallback display name.
+      if (!channelTitleCache[video.snippet.channelId]) {
+        channelTitleCache[video.snippet.channelId] = video.snippet.channelTitle;
+      }
     }
   }
 }
@@ -78,12 +86,11 @@ function isShort(video) {
   return isShortLength || /#shorts?\b/i.test(video.title);
 }
 
-// Fetch subscriber/video/view counts for channels not yet cached.
-async function loadChannelStats(channelIds) {
-  const missingIds = [...new Set(channelIds)].filter((id) => !channelStatsCache[id]);
-  for (let start = 0; start < missingIds.length; start += API_BATCH_SIZE) {
-    const batch = missingIds.slice(start, start + API_BATCH_SIZE).join(',');
-    const result = await apiFetch(`${YOUTUBE_API}channels?part=statistics&maxResults=50&id=${batch}`);
+// Fetch titles and subscriber/video/view counts from channels.list.
+async function fetchChannelInfo(channelIds) {
+  for (let start = 0; start < channelIds.length; start += API_BATCH_SIZE) {
+    const batch = channelIds.slice(start, start + API_BATCH_SIZE).join(',');
+    const result = await apiFetch(`${YOUTUBE_API}channels?part=snippet,statistics&maxResults=50&id=${batch}`);
     for (const channel of result.items || []) {
       const stats = channel.statistics;
       channelStatsCache[channel.id] = {
@@ -91,21 +98,40 @@ async function loadChannelStats(channelIds) {
         vids: +stats.videoCount,
         views: +stats.viewCount,
       };
+      channelTitleCache[channel.id] = channel.snippet.title;
     }
   }
+  localStorage.setItem('channelTitles', JSON.stringify(channelTitleCache));
 }
 
-// Custom name if set, otherwise the given or subscribed title, otherwise the ID.
-function channelName(channelId, originalTitle) {
-  const customName = appState.names && appState.names[channelId];
-  if (customName) {
-    return customName;
+// Load stats for channels whose stats aren't cached yet.
+async function loadChannelStats(channelIds) {
+  const missingIds = [...new Set(channelIds)].filter((id) => !channelStatsCache[id]);
+  await fetchChannelInfo(missingIds);
+}
+
+// Look up titles for channels we can't name yet. Returns true if any
+// were fetched, so the caller knows to redraw.
+async function loadMissingChannelTitles(channelIds) {
+  const missingIds = [...new Set(channelIds)].filter((id) => !knownChannelTitle(id));
+  if (!missingIds.length || !accessToken) {
+    return false;
   }
-  if (originalTitle) {
-    return originalTitle;
-  }
+  await fetchChannelInfo(missingIds);
+  return true;
+}
+
+// Title from the subscriptions list or channels.list, if we have one.
+function knownChannelTitle(channelId) {
   const subscription = subscriptions.find((sub) => sub.id === channelId);
-  return (subscription && subscription.title) || channelId;
+  return (subscription && subscription.title) || channelTitleCache[channelId] || '';
+}
+
+// Display name: custom name, else subscription/channel title, else the
+// title passed in (e.g. from a video), else the raw ID as a last resort.
+function channelName(channelId, fallbackTitle) {
+  const customName = appState.names && appState.names[channelId];
+  return customName || knownChannelTitle(channelId) || fallbackTitle || channelId;
 }
 
 function channelVideosUrl(channelId) {
