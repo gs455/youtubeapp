@@ -2,7 +2,7 @@
 // Strategy: network first, falling back to the cached copy.
 // Bump CACHE_NAME whenever files change so devices pick up the update.
 
-const CACHE_NAME = 'ytshelves-v11';
+const CACHE_NAME = 'ytshelves-v12';
 
 const APP_FILES = [
   './',
